@@ -1,0 +1,8 @@
+/wandb
+/.vscode
+/__pycache__
+*.pyc
+train_config.yaml
+*nii.gz
+scripts/
+tmp*

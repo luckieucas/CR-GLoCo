@@ -1,0 +1,118 @@
+exp: "test" # threshhold for model1 and model2 are 0.95
+method: CR-GLoCo 
+train_3D: True # whether to train 3D models
+backbone: unet_3D_old 
+backbone2: unet_3D_sr 
+dataset_name: LA #[BCV, MMWHS, LA]
+gpu: '0'
+#root_path: ../../dataset/Task012_Heart
+
+# continue training setting
+continue_wandb: False
+continue_training: True
+wandb_id: "2jkdqxmi"
+model_checkpoint: ""
+model2_checkpoint: ""
+
+current_iter_num: 17600
+
+# semi supervised learning setting
+began_semi_iter: 4000  #8000 #2000
+began_condition_iter: 3000 #4000
+
+# evaluation settings
+began_eval_iter: 2000 # 300
+val_freq: 400 #200
+
+# training settings
+save_checkpoint_freq: 200
+max_iterations: 20000
+use_CAC: True   # whether use Context-Aware-Consistency
+use_PL: False # whether use partial label
+deterministic: 1
+initial_lr: 0.01
+initial2_lr: 0.01 # for second network
+optimizer_type: 'SGD' # ['SGD' or 'Adam']
+optimizer2_type: 'SGD' # for second network
+model1_thresh: 0.90 #threshhold for model1
+model2_thresh: 0.95 # threshhold for model2
+seed: 1337
+ema_decay: 0.99
+consistency_type: mse
+consistency: 0.1 #0.1 1.0 for McNet
+consistency_rampup: 200.0
+weight_decay: 0.00001 #0.00001
+lr_scheduler_patience: 30
+lr_scheduler_eps: 0.001
+show_img_freq: 1000
+
+METHOD:
+  CR-GLoCo: # config for Context-Aware-Consistency
+    stride: 2
+    iou_bound_low: 0.1
+    iou_bound_high: 1.01
+    patch_size_large: [128,256,256] #[144, 256, 320]
+
+
+DATASET:
+  labeled_num: 8
+  labeled_num_pl: 60 # labeled number for partial labeled data
+  labeled_bs: 1 #1
+  batch_size: 2 #2
+  patch_size: [80,112,112] #[224, 224] #[96,112,112] # for DAN #[80,112,112] #[96,160,160]
+  cutout: True # do random cutout
+  rotate_trans: True # do random rotate
+  scale_trans: True # do random scale
+  random_rotflip: False # do random rotation and flip
+  edge_prob: 0.1 # prob to learn edge slice
+  normalization: 'Zscore'
+  LA: # config for LA dataset
+    num_classes: 2
+    class_name_list: ['LA']
+    weights: [1.0]
+    train_list: "../dataset/LA/TrainingSet/LA_train.txt"
+    test_list: "../dataset/LA/TrainingSet/LA_test.txt"
+    training_data_num: 80
+    testing_data_num: 20
+    cut_upper: 300 # 1000  200 for urpc
+    cut_lower: -200 # -1000 -68 for urpc 
+  MMWHS: # config for MMWHS dataset
+    num_classes: 8
+    class_name_list: ['MYO', 'LA', 'LV', 'RA', 'AA', 'PA', 'RV','Foreground']
+    weights: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    train_list: "../dataset/Task012_Heart/MMWHS_train.txt" #"../data/MMWHS/MMWHS_train.txt"
+    test_list: "../dataset/Task012_Heart/MMWHS_test.txt" #"../data/MMWHS/MMWHS_test.txt"
+    training_data_num: 14
+    testing_data_num: 6
+    cut_upper: 300 # 1000  200 for urpc
+    cut_lower: -200 # -1000 -68 for urpc
+  BCV: # config for BCV dataset
+    num_classes: 6
+    class_name_list: ['Spleen', 'Right_Kidney', 'Left_Kidney','Liver','Pancreas','Foreground']
+    weights: [1.0,1.0,1.0,1.0,1.0] #[0.2,0.2,0.2,0.1,0.3]
+    train_list: "../dataset/Task11_BCV/train.txt"
+    test_list: "../dataset/Task11_BCV/test.txt"
+    training_data_num: 24
+    testing_data_num: 6 
+    cut_upper: 275 #200
+    cut_lower: -125 #-68
+
+model:
+  # model class, e.g. UNet3D, ResidualUNet3D
+  name: Semi3DUNet
+  # number of input channels to the model
+  in_channels: 1
+  # number of output channels
+  out_channels: 8
+  # determines the order of operators in a single layer (gcr - GroupNorm+Conv3d+ReLU)
+  layer_order: gcr
+  # feature maps scale factor
+  f_maps: 16 #16
+  # number of levels
+  num_levels: 5 #4
+  # number of groups in the groupnorm
+  num_groups: 8
+  # apply element-wise nn.Sigmoid after the final 1x1 convolution, otherwise apply nn.Softmax
+  final_sigmoid: False
+  # if True applies the final normalization layer (sigmoid or softmax), otherwise the networks returns the output from the final convolution layer; use False for regression problems, e.g. de-noising
+  is_segmentation: true
